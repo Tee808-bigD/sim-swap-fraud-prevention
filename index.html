@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SimGuard</title>
+    <style>
+        body { font-family: Arial; max-width: 500px; margin: 50px auto; padding: 20px; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; }
+        button { background: blue; color: white; border: none; cursor: pointer; }
+        .approved { background: #d1fae5; padding: 15px; border-left: 4px solid green; }
+        .blocked { background: #fee2e2; padding: 15px; border-left: 4px solid red; }
+        .flagged { background: #fef3c7; padding: 15px; border-left: 4px solid orange; }
+    </style>
+</head>
+<body>
+    <h1>SimGuard</h1>
+    <p>SIM Swap Fraud Prevention</p>
+    
+    <input type="text" id="phone" placeholder="Phone Number" value="+99999991000">
+    <input type="number" id="amount" placeholder="Amount" value="1000">
+    <label><input type="checkbox" id="newRecipient"> New Recipient</label>
+    <button onclick="checkTransaction()">Check Transaction</button>
+    <div id="result"></div>
+
+    <script>
+        async function checkTransaction() {
+            const phone = document.getElementById('phone').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const isNew = document.getElementById('newRecipient').checked;
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Checking...';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/transactions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone_number: phone, amount: amount, is_new_recipient: isNew })
+                });
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<div class="${data.status}">
+                    <h3>Decision: ${data.status.toUpperCase()}</h3>
+                    <p>Risk Score: ${data.risk_score}/100</p>
+                    <p>${data.message}</p>
+                </div>`;
+            } catch(error) {
+                resultDiv.innerHTML = '<div class="blocked">Error: Backend not running on port 8000</div>';
+            }
+        }
+    </script>
+</body>
+</html>
